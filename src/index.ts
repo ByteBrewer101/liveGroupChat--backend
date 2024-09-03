@@ -41,6 +41,6 @@ wss.on("connection", (ws) => {
   });
 
   ws.on("close", () => {
-    console.log("User disconnected");
+    console.log("User disconnected now");
   });
 });
