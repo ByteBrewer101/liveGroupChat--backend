@@ -1,10 +1,10 @@
 import { WebSocket } from "ws";
 
 export class Room {
-  private RoomId: String;
+  private RoomId: string;
   private Users: WebSocket[] = [];
 
-  constructor(rId: String) {
+  constructor(rId: string) {
     this.RoomId = rId;
   }
 
@@ -12,50 +12,53 @@ export class Room {
     this.Users.push(ws);
   }
 
-  removeUser(ws: WebSocket) {}
+  removeUser(ws: WebSocket) {
+    this.Users = this.Users.filter((user) => user !== ws);
+  }
 
   getRoomId() {
     return this.RoomId;
   }
 
-  sendMessage(message: String) {
+  sendMessage(currentUserWs: WebSocket, message: string) {
     this.Users.forEach((ws: WebSocket) => {
-      ws.send(message)
+      if (ws !== currentUserWs) {
+        ws.send(message);
+      }
     });
   }
 }
 
 export class RoomManager {
-  private Rooms: Room[] = [];
+  public Rooms: Room[] = [];
 
-  addNewRoom(Room: Room) {
-    this.Rooms.push(Room);
+  addNewRoom(room: Room) {
+   
+    this.Rooms.push(room);
   }
 
-  adduserToRoom(rId: String, ws: WebSocket) {
-    this.Rooms.map((i) => {
-      if (i.getRoomId() === rId) {
-        i.addUser(ws);
-      }
-      ws.send("room does not exist");
-    });
-  }
-
-  messageRoom(message: String, rId: String) {
-    const currentRoom = this.Rooms.find((room) => {
-      room.getRoomId() == rId;
-    });
-    currentRoom?.sendMessage(message)
+  addUserToRoom(rId: string, ws: WebSocket) {
     
+    const room = this.Rooms.find((i) => i.getRoomId() === rId); 
+    if (room) {
+      room.addUser(ws);
+    } else {
+      ws.send("Room does not exist"); 
+    }
   }
 
-  deleteRoom(rId: String) {
+  messageRoom(message: string, rId: string, currentws:WebSocket) {
+    
+    const currentRoom = this.Rooms.find((room) => room.getRoomId() === rId); 
+    if (currentRoom) {
+      currentRoom.sendMessage(currentws,message);
+    } else {
+      console.error("Room does not exist"); 
+    }
+  }
+
+  deleteRoom(rId: string) {
+    
     this.Rooms = this.Rooms.filter((room) => room.getRoomId() !== rId);
   }
 }
-
-
-
-
-
-
