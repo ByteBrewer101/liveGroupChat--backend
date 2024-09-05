@@ -30,6 +30,7 @@ wss.on("connection", (ws) => {
         }
         if (Message.type === "joinRoom") {
             roomManager.addUserToRoom(Message.id, ws);
+            console.log("user joined");
         }
         if (Message.type === "chat") {
             roomManager.messageRoom(Message.chat, Message.id, ws);
