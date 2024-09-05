@@ -7,7 +7,8 @@ const express_1 = __importDefault(require("express"));
 const ws_1 = require("ws");
 const ChatManager_1 = require("./ChatManager");
 const app = (0, express_1.default)();
-const server = app.listen(3000, () => {
+const port = process.env.PORT_APPLICATION || 3000;
+const server = app.listen(port, () => {
     console.log("running on " + Date());
 });
 const wss = new ws_1.WebSocketServer({ server });

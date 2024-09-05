@@ -4,7 +4,9 @@ import { Room, RoomManager } from "./ChatManager";
 
 const app = express();
 
-const server = app.listen(3000, () => {
+const port = process.env.PORT_APPLICATION || 3000
+
+const server = app.listen(port, () => {
   console.log("running on " + Date());
 });
 
