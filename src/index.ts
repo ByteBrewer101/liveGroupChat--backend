@@ -14,7 +14,8 @@ const wss = new WebSocketServer({ server });
 const roomManager = new RoomManager();
 
 wss.on("connection", (ws) => {
-  ws.send("User connected");
+  ws.send("You are connected");
+  ws.send("Create a Room or Join an existing one , Share the room code and chat ");
 
   ws.on("message", (message: string) => {
     const Message = JSON.parse(message);
