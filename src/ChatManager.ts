@@ -13,6 +13,10 @@ export class Room {
       this.Users.push(ws);
       console.log(`User added to room ${this.RoomId}`);
     }
+    else {
+      sendMessage(ws,"system","already joined")
+      
+    }
   }
 
   removeUser(ws: WebSocket) {
@@ -28,7 +32,8 @@ export class Room {
     this.Users.forEach((ws: WebSocket) => {
       if (ws !== currentUserWs && ws.readyState === WebSocket.OPEN) {
         try {
-          ws.send(message);
+          
+          sendMessage(ws,"user",message)
         } catch (error) {
           console.error("Error sending message to user:", error);
           this.removeUser(ws); // Clean up if sending fails
@@ -42,6 +47,7 @@ export class RoomManager {
   public Rooms: Room[] = [];
 
   addNewRoom(room: Room) {
+  
     this.Rooms.push(room);
     console.log(`New room created: ${room.getRoomId()}`);
   }
@@ -52,7 +58,8 @@ export class RoomManager {
       room.addUser(ws);
     } else {
       console.error(`Room ${rId} does not exist`);
-      ws.send("Room does not exist");
+      sendMessage(ws,"system","Room does not exist")
+    
     }
   }
 
@@ -75,3 +82,13 @@ export class RoomManager {
     }
   }
 }
+
+
+
+export function sendMessage(ws:WebSocket,rece:string,msg:string)
+{
+ return ws.send(JSON.stringify({
+    "recepient": rece,
+    "message":msg
+  }))
+} 

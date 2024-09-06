@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RoomManager = exports.Room = void 0;
+exports.sendMessage = sendMessage;
 const ws_1 = require("ws");
 class Room {
     constructor(rId) {
@@ -11,6 +12,9 @@ class Room {
         if (!this.Users.includes(ws)) {
             this.Users.push(ws);
             console.log(`User added to room ${this.RoomId}`);
+        }
+        else {
+            sendMessage(ws, "system", "already joined");
         }
     }
     removeUser(ws) {
@@ -24,7 +28,7 @@ class Room {
         this.Users.forEach((ws) => {
             if (ws !== currentUserWs && ws.readyState === ws_1.WebSocket.OPEN) {
                 try {
-                    ws.send(message);
+                    sendMessage(ws, "user", message);
                 }
                 catch (error) {
                     console.error("Error sending message to user:", error);
@@ -50,7 +54,7 @@ class RoomManager {
         }
         else {
             console.error(`Room ${rId} does not exist`);
-            ws.send("Room does not exist");
+            sendMessage(ws, "system", "Room does not exist");
         }
     }
     messageRoom(message, rId, currentws) {
@@ -74,3 +78,9 @@ class RoomManager {
     }
 }
 exports.RoomManager = RoomManager;
+function sendMessage(ws, rece, msg) {
+    return ws.send(JSON.stringify({
+        "recepient": rece,
+        "message": msg
+    }));
+}

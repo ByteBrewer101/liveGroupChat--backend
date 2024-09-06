@@ -1,6 +1,6 @@
 import express from "express";
 import { WebSocketServer, WebSocket } from "ws";
-import { Room, RoomManager } from "./ChatManager";
+import { Room, RoomManager, sendMessage } from "./ChatManager";
 
 const app = express();
 
@@ -14,23 +14,28 @@ const wss = new WebSocketServer({ server });
 const roomManager = new RoomManager();
 
 wss.on("connection", (ws) => {
-  ws.send("You are connected");
-  ws.send("Create a Room or Join an existing one , Share the room code and chat ");
+  sendMessage(ws,"system","You are connected")
+
 
   ws.on("message", (message: string) => {
     const Message = JSON.parse(message);
+
+    if(Message.id.trim()===""){
+     sendMessage(ws,"system","Invalid Room id")
+    }
 
     if (Message.type === "createRoom") {
       const existingRoom = roomManager.Rooms.find(
         (room) => room.getRoomId() === Message.id
       );
       if (existingRoom) {
-        ws.send("Room already exists");
+        sendMessage(ws,"system","Room already exists")
+
       } else {
         const currentRoom = new Room(Message.id);
         roomManager.addNewRoom(currentRoom);
         currentRoom.addUser(ws);
-        ws.send("Room created");
+        sendMessage(ws,"system","Room created")
       }
     }
 

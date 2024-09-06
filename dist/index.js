@@ -14,19 +14,22 @@ const server = app.listen(port, () => {
 const wss = new ws_1.WebSocketServer({ server });
 const roomManager = new ChatManager_1.RoomManager();
 wss.on("connection", (ws) => {
-    ws.send("User connected");
+    (0, ChatManager_1.sendMessage)(ws, "system", "You are connected");
     ws.on("message", (message) => {
         const Message = JSON.parse(message);
+        if (Message.id.trim() === "") {
+            (0, ChatManager_1.sendMessage)(ws, "system", "Invalid Room id");
+        }
         if (Message.type === "createRoom") {
             const existingRoom = roomManager.Rooms.find((room) => room.getRoomId() === Message.id);
             if (existingRoom) {
-                ws.send("Room already exists");
+                (0, ChatManager_1.sendMessage)(ws, "system", "Room already exists");
             }
             else {
                 const currentRoom = new ChatManager_1.Room(Message.id);
                 roomManager.addNewRoom(currentRoom);
                 currentRoom.addUser(ws);
-                ws.send("Room created");
+                (0, ChatManager_1.sendMessage)(ws, "system", "Room created");
             }
         }
         if (Message.type === "joinRoom") {
