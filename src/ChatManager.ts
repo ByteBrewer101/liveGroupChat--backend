@@ -1,88 +1,46 @@
 import { WebSocket } from "ws";
+import { RoomManager2 } from "./Classes/RoomManager";
 
-export class Room {
-  private RoomId: string;
-  private Users: WebSocket[] = [];
 
-  constructor(rId: string) {
-    this.RoomId = rId;
-  }
-
-  addUser(ws: WebSocket) {
-    if (!this.Users.includes(ws)) {
-      this.Users.push(ws);
-      console.log(`User added to room ${this.RoomId}`);
-    }
-    else {
-      sendMessage(ws,"system","already joined")
-      
-    }
-  }
-
-  removeUser(ws: WebSocket) {
-    this.Users = this.Users.filter((user) => user !== ws);
-    console.log(`User removed from room ${this.RoomId}`);
-  }
-
-  getRoomId() {
-    return this.RoomId;
-  }
-
-  sendMessage(currentUserWs: WebSocket, message: string) {
-    this.Users.forEach((ws: WebSocket) => {
-      if (ws !== currentUserWs && ws.readyState === WebSocket.OPEN) {
-        try {
-          
-          sendMessage(ws,"user",message)
-        } catch (error) {
-          console.error("Error sending message to user:", error);
-          this.removeUser(ws); // Clean up if sending fails
-        }
-      }
-    });
-  }
+interface Message{
+type:string,
+id:string,
+username:string,
+chat:string
 }
 
-export class RoomManager {
-  public Rooms: Room[] = [];
 
-  addNewRoom(room: Room) {
-  
-    this.Rooms.push(room);
-    console.log(`New room created: ${room.getRoomId()}`);
-  }
+export function handleRoomMessage(currentMessage:Message, ws:WebSocket, roomManager:RoomManager2) {
+  const { type, id, username, chat } = currentMessage;
 
-  addUserToRoom(rId: string, ws: WebSocket) {
-    const room = this.Rooms.find((i) => i.getRoomId() === rId);
-    if (room) {
-      room.addUser(ws);
+  // Handle room creation
+  if (type === "createRoom") {
+    if (roomManager.Rooms.get(id)) {
+      sendMessage(ws, "system", "This Room already Exists");
     } else {
-      console.error(`Room ${rId} does not exist`);
-      sendMessage(ws,"system","Room does not exist")
-    
+      const currentRoom = roomManager.createRoom(id);
+      currentRoom.addUser(ws, username);
     }
   }
 
-  messageRoom(message: string, rId: string, currentws: WebSocket) {
-    const currentRoom = this.Rooms.find((room) => room.getRoomId() === rId);
-    if (currentRoom) {
-      currentRoom.sendMessage(currentws, message);
+  // Handle joining a room
+  if (type === "joinRoom") {
+    if (!roomManager.Rooms.get(id)) {
+      sendMessage(ws, "system", "Room does not exist");
     } else {
-      console.error(`Room ${rId} does not exist`);
+      roomManager.Rooms.get(id)?.addUser(ws, username);
     }
   }
 
-  deleteRoom(rId: string) {
-    const roomExists = this.Rooms.some((room) => room.getRoomId() === rId);
-    if (roomExists) {
-      this.Rooms = this.Rooms.filter((room) => room.getRoomId() !== rId);
-      console.log(`Room ${rId} deleted`);
+  // Handle chat messages
+  if (type === "chat") {
+    if (!roomManager.Rooms.get(id)) {
+      sendMessage(ws, "system", "Room Does Not Exist");
     } else {
-      console.error(`Room ${rId} does not exist`);
+      roomManager.deliverMessage(id, chat,username,ws);
     }
   }
 }
-
 
 
 export function sendMessage(ws:WebSocket,rece:string,msg:string)
@@ -92,3 +50,10 @@ export function sendMessage(ws:WebSocket,rece:string,msg:string)
     "message":msg
   }))
 } 
+
+
+
+
+
+
+

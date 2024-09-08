@@ -1,83 +1,39 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RoomManager = exports.Room = void 0;
+exports.handleRoomMessage = handleRoomMessage;
 exports.sendMessage = sendMessage;
-const ws_1 = require("ws");
-class Room {
-    constructor(rId) {
-        this.Users = [];
-        this.RoomId = rId;
-    }
-    addUser(ws) {
-        if (!this.Users.includes(ws)) {
-            this.Users.push(ws);
-            console.log(`User added to room ${this.RoomId}`);
+function handleRoomMessage(currentMessage, ws, roomManager) {
+    var _a;
+    const { type, id, username, chat } = currentMessage;
+    // Handle room creation
+    if (type === "createRoom") {
+        if (roomManager.Rooms.get(id)) {
+            sendMessage(ws, "system", "This Room already Exists");
         }
         else {
-            sendMessage(ws, "system", "already joined");
+            const currentRoom = roomManager.createRoom(id);
+            currentRoom.addUser(ws, username);
         }
     }
-    removeUser(ws) {
-        this.Users = this.Users.filter((user) => user !== ws);
-        console.log(`User removed from room ${this.RoomId}`);
-    }
-    getRoomId() {
-        return this.RoomId;
-    }
-    sendMessage(currentUserWs, message) {
-        this.Users.forEach((ws) => {
-            if (ws !== currentUserWs && ws.readyState === ws_1.WebSocket.OPEN) {
-                try {
-                    sendMessage(ws, "user", message);
-                }
-                catch (error) {
-                    console.error("Error sending message to user:", error);
-                    this.removeUser(ws); // Clean up if sending fails
-                }
-            }
-        });
-    }
-}
-exports.Room = Room;
-class RoomManager {
-    constructor() {
-        this.Rooms = [];
-    }
-    addNewRoom(room) {
-        this.Rooms.push(room);
-        console.log(`New room created: ${room.getRoomId()}`);
-    }
-    addUserToRoom(rId, ws) {
-        const room = this.Rooms.find((i) => i.getRoomId() === rId);
-        if (room) {
-            room.addUser(ws);
-        }
-        else {
-            console.error(`Room ${rId} does not exist`);
+    // Handle joining a room
+    if (type === "joinRoom") {
+        if (!roomManager.Rooms.get(id)) {
             sendMessage(ws, "system", "Room does not exist");
         }
-    }
-    messageRoom(message, rId, currentws) {
-        const currentRoom = this.Rooms.find((room) => room.getRoomId() === rId);
-        if (currentRoom) {
-            currentRoom.sendMessage(currentws, message);
-        }
         else {
-            console.error(`Room ${rId} does not exist`);
+            (_a = roomManager.Rooms.get(id)) === null || _a === void 0 ? void 0 : _a.addUser(ws, username);
         }
     }
-    deleteRoom(rId) {
-        const roomExists = this.Rooms.some((room) => room.getRoomId() === rId);
-        if (roomExists) {
-            this.Rooms = this.Rooms.filter((room) => room.getRoomId() !== rId);
-            console.log(`Room ${rId} deleted`);
+    // Handle chat messages
+    if (type === "chat") {
+        if (!roomManager.Rooms.get(id)) {
+            sendMessage(ws, "system", "Room Does Not Exist");
         }
         else {
-            console.error(`Room ${rId} does not exist`);
+            roomManager.deliverMessage(id, chat, username, ws);
         }
     }
 }
-exports.RoomManager = RoomManager;
 function sendMessage(ws, rece, msg) {
     return ws.send(JSON.stringify({
         "recepient": rece,
