@@ -31,4 +31,14 @@ export class Room2 {
       sendMessage(ws, "system", "you already are in this room");
     }
   }
+
+
+    removeUser(ws: WebSocket) {
+    if (this.UserMap.has(ws)) {
+      const username = this.UserMap.get(ws);
+      this.UserMap.delete(ws);
+      sendMessage(ws, "system", "You have been disconnected from " + this.RoomId);
+      this.broadCastMessage(`${username} has left the room.`, "system", ws);
+    }
+}
 }

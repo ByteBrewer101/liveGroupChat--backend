@@ -22,5 +22,8 @@ wss.on("connection", (ws) => {
     });
     ws.on("close", () => {
         console.log("User disconnected now");
+        roomManager.Rooms.forEach((room) => {
+            room.removeUser(ws);
+        });
     });
 });

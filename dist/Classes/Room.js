@@ -29,5 +29,13 @@ class Room2 {
             (0, ChatManager_1.sendMessage)(ws, "system", "you already are in this room");
         }
     }
+    removeUser(ws) {
+        if (this.UserMap.has(ws)) {
+            const username = this.UserMap.get(ws);
+            this.UserMap.delete(ws);
+            (0, ChatManager_1.sendMessage)(ws, "system", "You have been disconnected from " + this.RoomId);
+            this.broadCastMessage(`${username} has left the room.`, "system", ws);
+        }
+    }
 }
 exports.Room2 = Room2;
