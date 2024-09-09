@@ -29,6 +29,8 @@ export function handleRoomMessage(currentMessage:Message, ws:WebSocket, roomMana
       sendMessage(ws, "system", "Room does not exist");
     } else {
       roomManager.Rooms.get(id)?.addUser(ws, username);
+      const msg1 = username + " has joined the room"
+      roomManager.Rooms.get(id)?.broadCastMessage(msg1,username,ws)
     }
   }
 
